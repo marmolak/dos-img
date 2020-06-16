@@ -1,12 +1,10 @@
+#include <dos.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <conio.h>
+
 #include <cstdio>
 #include <cstdlib>
-#include <cstdlib>
-#include <dos.h>
-#include <conio.h>
-#include <fstream>
-#include <string>
-#include <istream>
-#include <cstring>
 
 /* VGA Palette access port addresses */
 #define PALETTE_MASK  0x3C6
@@ -106,33 +104,29 @@ void fill_pallete()
 }
 
 
-char buff[320];
-
-
 int main()
 {
-	std::cout << "Please wait..." << std::endl;
-
-	unsigned char *double_buffer = (unsigned char *) std::malloc(320);
-	std::ifstream fout;
-	fout.open("image.raw");
+	int handle = -1;
+	if(_dos_open("image.raw", O_RDONLY, &handle ) != 0)
+	{
+		return 1;
+	}
 
 	switch_graphics();
 	save_pallete();
 	fill_pallete();
 
 	unsigned char far *p = (unsigned char far *)0xA0000000L;
+	unsigned char far *p_end = (unsigned char far *) (0xA0000000L + (320 * 200));
 
 	do
 	{
-		fout.read(double_buffer, 320);
-		if (fout.eof()) {
-			break;
-		}
-		_fmemcpy(p, double_buffer, (size_t) 320);
-		p += fout.gcount();
-	} while (true);
-	fout.close();
+		unsigned len_read;
+		_dos_read(handle, p, 320, &len_read);
+		p += 320;
+	} while (p < p_end);
+	
+	_dos_close(handle);
 
 	fill_2();
 
