@@ -1,1 +1,1 @@
-wcl -3 MAIN.CPP
+wcl -0 -fpi87 -d0 MAIN.CPP
