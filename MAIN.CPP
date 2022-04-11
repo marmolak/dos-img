@@ -12,6 +12,25 @@
 #define PALETTE_WRITE 0x3C8
 #define PALETTE_DATA  0x3C9
 
+#define VGA_PORT 0x3D8
+
+void disable_vga_ray(void);
+#pragma aux disable_vga_ray = 	\
+	"mov dx, 0x3D8"		\
+	"in al, dx"		\
+	"and al, 0x0F7"		\
+	"out dx, al" 		\
+	modify [ dx ax ];
+
+void enable_vga_ray();
+#pragma aux enable_vga_ray =	\
+	"mov dx, 0x3D8"		\
+	"in al, dx"		\
+	"or al, 0x8"		\
+	"out dx, al"		\
+	modify [ dx ax ];
+
+
 void switch_mode(char mode)
 {
     union REGS i_regs;
@@ -113,8 +132,9 @@ int main()
 	}
 
 	switch_graphics();
-	save_pallete();
-	fill_pallete();
+	disable_vga_ray();
+	// save_pallete();
+	// fill_pallete();
 
 	unsigned char far *p = (unsigned char far *)0xA0000000L;
 	unsigned char far *p_end = (unsigned char far *) (0xA0000000L + (320 * 200));
@@ -128,7 +148,9 @@ int main()
 	
 	_dos_close(handle);
 
-	fill_2();
+	enable_vga_ray();
+
+	// fill_2();
 
 	std::getchar();
 	switch_text();
